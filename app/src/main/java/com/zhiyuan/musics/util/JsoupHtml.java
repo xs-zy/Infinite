@@ -28,16 +28,11 @@ public class JsoupHtml {
                 }
                 //   分区解析
         Elements element = document.select("table.mainTable>tbody");
-        for(Element element1 : element){
-            Log.d("xuezhiyuan",element1.html());
-            Elements tr = element1.select("tr");
-            for(Element element2 : tr){
-                Elements td = element2.select("td");
-                for(Element element3 : td){
-
-                }
-            }
-        }
-        musicBean.setSongId(document.select("a.onclick").attr("id"));
+        Element element1 = element.get(0);
+        Elements tr = element1.select("tr");
+        Element element4 = tr.get(2);
+        Elements th1 = element4.select("th");
+        String id = th1.select("i.checkboxI>input").attr("id");
+        Log.d("xuezhiyuan",id);
     }
 }
