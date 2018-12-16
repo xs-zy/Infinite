@@ -1,6 +1,7 @@
 package com.zhiyuan.musics;
 
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -11,14 +12,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.zhiyuan.musics.model.MusicBean;
 import com.zhiyuan.musics.util.JsoupHtml;
 import com.zhiyuan.musics.util.OkHttpUtils;
+import com.zhiyuan.musics.util.StatusBarUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.util.List;
 
 import me.wcy.lrcview.LrcView;
 
@@ -30,21 +37,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private Handler handler = new Handler();
     EditText editText;
-    Button button;
-
+    SearchView button;
+    private List<MusicBean.DataBean.SongListBean> songList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        StatusBarUtils.setWindowStatusBarColor(this, Color.BLUE);
         editText = (EditText) findViewById(R.id.editMusic);
-        button = (Button) findViewById(R.id.findMusic);
+        button = (SearchView) findViewById(R.id.findMusic);
         button.setOnClickListener(this);
         lrcView = (LrcView) findViewById(R.id.lrc_view);
         seekBar = (SeekBar) findViewById(R.id.progress_bar);
         btnPlayPause = (Button) findViewById(R.id.btn_play_pause);
         try {
             mediaPlayer.reset();
-            AssetFileDescriptor fileDescriptor = getAssets().openFd("chengdu.mp3");
+            AssetFileDescriptor fileDescriptor = getAssets().openFd("jiangnan.mp3");
             mediaPlayer.setDataSource(fileDescriptor.getFileDescriptor(), fileDescriptor.getStartOffset(), fileDescriptor.getLength());
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -65,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
 
-        lrcView.loadLrc(getLrcText("chengdu.lrc"));
+        lrcView.loadLrc(getLrcText("jiangnan.lrc"));
 
         lrcView.setOnPlayClickListener(new LrcView.OnPlayClickListener() {
             @Override
@@ -153,20 +161,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if("".equals(re) || TextUtils.isEmpty(re)){
                     Toast.makeText(this,"请输入歌曲",Toast.LENGTH_LONG).show();
                 }else {
-                    OkHttpUtils okHttpUtils = new OkHttpUtils();
-                    String httpGet = okHttpUtils.okHttpGet(re, 1);
-                    Log.d("xuezhiyuan",httpGet);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                JsoupHtml jsoupHtml = new JsoupHtml();
-                                try {
-                                    jsoupHtml.getUrl("http://musicmini.baidu.com/app/search/searchList.php?qword="+re+"&ie=utf-8&page="+1);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            JsoupHtml jsoupHtml = new JsoupHtml();
+                            try {
+                                String id = jsoupHtml.getUrl("http://musicmini.baidu.com/app/search/searchList.php?qword=" + re + "&ie=utf-8&page=" + 1);
+                                if("".equals(id) || TextUtils.isEmpty(id)){
+                                    Log.d("xuezhiyuan","null");
+                                }else {
+                                    OkHttpUtils okHttpUtils = new OkHttpUtils();
+                                    String httpGet = okHttpUtils.okHttpGet(id);
+                                    Gson gson = new Gson();
+                                    MusicBean musicBean = new MusicBean();
+                                    MusicBean fromJson = gson.fromJson(httpGet, (Type) musicBean);
+                                    Log.d("xuezhiyuan",httpGet);
+                                    songList = fromJson.getData().getSongList();
                                 }
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        }).start();
+                        }
+                    }).start();
                 }
             }
             break;

@@ -21,11 +21,11 @@ public class OkHttpUtils {
 
     private String returnData = "";
 
-    public String okHttpGet(String music,int page){
+    public String okHttpGet(String songId){
         //构造一个Request对象，参数最起码有个url，
         // 当然你可以通过Request.Builder设置更多的参数比如：header、method等。
         final Request request = new Request.Builder()
-                .url("http://musicmini.baidu.com/app/search/searchList.php?qword="+music+"&ie=utf-8&page="+page)
+                .url("http://ting.baidu.com/data/music/links?songIds="+songId)
                 .build();
         String response = getResponse(request);
         return response;

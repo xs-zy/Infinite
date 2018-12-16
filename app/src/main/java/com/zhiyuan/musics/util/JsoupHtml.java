@@ -14,7 +14,7 @@ import java.io.IOException;
 
 public class JsoupHtml {
     MusicBean musicBean;
-    public void getUrl(final String url) throws IOException {
+    public String getUrl(final String url) throws IOException {
         musicBean = new MusicBean();
                 Document document = null;
                 try {
@@ -33,6 +33,6 @@ public class JsoupHtml {
         Element element4 = tr.get(2);
         Elements th1 = element4.select("th");
         String id = th1.select("i.checkboxI>input").attr("id");
-        Log.d("xuezhiyuan",id);
+        return id;
     }
 }
